@@ -9,7 +9,7 @@
 int main(int argc, char *argv[])
 {
     // Обов'язково для роботи Wayland-композитора всередині вікна (для тестування)
-    qputenv("QT_QPA_PLATFORM", "wayland;xcb");
+    //qputenv("QT_QPA_PLATFORM", "wayland;xcb");
     qputenv("QT_WAYLAND_CLIENT_BUFFER_INTEGRATION", "wayland-egl");
     qputenv("QT_WAYLAND_HARDWARE_INTEGRATION", "wayland-egl");
 

@@ -56,3 +56,5 @@ target_link_libraries(eternal-ui PRIVATE
     Qt6::Quick
     Qt6::WaylandCompositor
 )
+
+install(TARGETS eternal-ui DESTINATION bin)

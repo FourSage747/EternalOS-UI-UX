@@ -1,11 +1,8 @@
 import QtQuick
 import QtWayland.Compositor
-import QtWayland.Compositor.XdgShell // Додаємо модуль для роботи з вікнами
+import QtWayland.Compositor.XdgShell
 import QtCore
 import Eternal.Core
-import "background"
-import "window"
-import "appmodel"
 
 WaylandCompositor {
     id: compositor
@@ -13,7 +10,7 @@ WaylandCompositor {
 
     WaylandManager { id: waylandManager }
     AppLauncher { id: sysAppLauncher }
-    AppModel { id: runningAppsModel }
+    RunningAppsModel { id: runningAppsModel }
     WindowManager { 
         id: winManager
         appModel: runningAppsModel

@@ -8,13 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Умикаємо AUTOMOC (це виправить головну помилку)
 set(CMAKE_AUTOMOC ON)
 
-# Встановлюємо нову політику Qt для QML (це прибере попередження)
-if(COMMAND qt_policy)
-    qt_policy(SET QTP0001 NEW)
-endif()
-
-# Шукаємо необхідні модулі Qt6
+# 1. Спочатку завантажуємо модулі Qt6 (щоб CMake дізнався про команду qt_policy)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick WaylandCompositor)
+
+# 2. Встановлюємо нові політики Qt для правильного пакування QML
+qt_policy(SET QTP0001 NEW)
+qt_policy(SET QTP0004 NEW)
 
 # Створюємо виконуваний файл
 qt_add_executable(eternal-ui
@@ -34,7 +33,7 @@ qt_add_qml_module(eternal-ui
         qml/Main.qml
         qml/Taskbar.qml
         qml/Launcher.qml
-        qml/appmodel/AppModel.qml
+        qml/appmodel/RunningAppsModel.qml
         qml/background/DesktopBackground.qml
         qml/window/AppXdgShell.qml
         qml/window/WaylandWindow.qml

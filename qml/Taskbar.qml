@@ -63,7 +63,7 @@ Rectangle {
                 width: 40
                 height: 40
                 // Фон підсвічується ТІЛЬКИ якщо програма відкрита І активна
-                color: (isRunning && isActive) ? "#45475a" : (mouseArea.containsMouse ? "#313244" : "transparent")
+                color: (model.isRunning && model.isActive) ? "#45475a" : (mouseArea.containsMouse ? "#313244" : "transparent")
                 radius: 6
                 
                 Image {
@@ -72,7 +72,7 @@ Rectangle {
                     height: 24
                     
                     // Якщо appId є, шукаємо його, інакше ставимо заглушку
-                    source: appId ? "image://icons/" + appId : "image://icons/application-x-executable"
+                    source: model.appId ? "image://icons/" + model.appId : "image://icons/application-x-executable"
                     sourceSize: Qt.size(24, 24)
 
                     // Якщо оригінальна іконка бита, миттєво підміняємо її
@@ -90,20 +90,20 @@ Rectangle {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 2
                     anchors.horizontalCenter: parent.horizontalCenter
-                    color: isActive ? "#89b4fa" : "#6c7086"
-                    visible: isRunning
+                    color: model.isActive ? "#89b4fa" : "#6c7086"
+                    visible: model.isRunning
                     radius: 2
                 }
 
                 // Спливаюча підказка з назвою вікна
                 ToolTip.visible: mouseArea.containsMouse
-                ToolTip.text: appTitle
+                ToolTip.text: model.appTitle
 
                 MouseArea {
                     id: mouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: isRunning ? root.windowClicked(winId) : root.launchRequested(appExec)
+                    onClicked: model.isRunning ? root.windowClicked(winId) : root.launchRequested(appExec)
                 }
             }
         }

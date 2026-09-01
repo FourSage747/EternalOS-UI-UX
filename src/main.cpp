@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QIcon>
 #include "AppLauncher.h"
 #include "WaylandManager.h"
 #include "AppModel.h"
@@ -10,8 +11,9 @@ int main(int argc, char *argv[])
 {
     qputenv("QT_WAYLAND_CLIENT_BUFFER_INTEGRATION", "wayland-egl");
     qputenv("QT_WAYLAND_HARDWARE_INTEGRATION", "wayland-egl");
-
+    QIcon::setThemeSearchPaths({"/usr/share/icons"});
     QGuiApplication app(argc, argv);
+    QIcon::setThemeName("hicolor");
     QCoreApplication::setOrganizationName("EternalOS");
     QCoreApplication::setOrganizationDomain("eternal-os.org");
 

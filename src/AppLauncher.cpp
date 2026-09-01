@@ -13,7 +13,8 @@ void AppLauncher::launch(const QString &command) {
     env.insert("WAYLAND_DISPLAY", "eternal-0");
     env.insert("MOZ_ENABLE_WAYLAND", "1");      // Примусовий Wayland для Firefox
     env.remove("DISPLAY");
-    
+    // ДОДАЄМО ЦЕ: Примусово вказуємо програмам бути клієнтами!
+    env.insert("QT_QPA_PLATFORM", "wayland");
     QProcess process;
     process.setProcessEnvironment(env);
     

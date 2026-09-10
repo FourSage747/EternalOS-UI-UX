@@ -23,6 +23,7 @@ qt_add_executable(eternal-ui
     src/AppModel.cpp
     src/IconImageProvider.h
     src/AppFilterModel.cpp
+    src/core/VTManager.cpp
 )
 
 # Підключаємо QML файли як модуль

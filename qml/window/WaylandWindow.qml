@@ -6,6 +6,15 @@ ShellSurfaceItem {
     id: surfaceItem
     autoCreatePopupItems: true
     
+    // 1. Дозволяємо компоненту приймати фокус клавіатури
+    focus: true
+
+    TapHandler {
+        onTapped: surfaceItem.forceActiveFocus()
+    }
+    Keys.onPressed: (event) => {
+        console.log("ПЕРЕХОПЛЕНО В КОМПОЗИТОРІ! Код:", event.key, "Текст:", event.text)
+    }
     property var toplevel: shellSurface ? shellSurface.toplevel : null
     property string windowId 
     

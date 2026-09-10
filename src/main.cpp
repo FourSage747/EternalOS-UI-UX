@@ -6,9 +6,12 @@
 #include "AppModel.h"
 #include "IconImageProvider.h"
 #include "AppFilterModel.h"
+#include "core/VTManager.h"
 
 int main(int argc, char *argv[])
 {
+    // Захоплюємо контроль над віртуальним терміналом ядра
+    VTManager vtManager;
     qputenv("QT_WAYLAND_CLIENT_BUFFER_INTEGRATION", "wayland-egl");
     qputenv("QT_WAYLAND_HARDWARE_INTEGRATION", "wayland-egl");
     QIcon::setThemeSearchPaths({"/usr/share/icons"});

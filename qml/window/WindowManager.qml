@@ -30,7 +30,7 @@ QtObject {
                     updateWindowData(winId, "isMinimized", false);
                     updateWindowData(winId, "isActive", true);
                     surface.z = ++container.globalZ;
-                    surface.forceActiveFocus();
+                    surface.takeFocus();
                 }
                 break;
             }

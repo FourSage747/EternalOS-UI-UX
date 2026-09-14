@@ -9,12 +9,20 @@ ShellSurfaceItem {
     // 1. Дозволяємо компоненту приймати фокус клавіатури
     focus: true
 
-    TapHandler {
-        onTapped: surfaceItem.forceActiveFocus()
-    }
-    Keys.onPressed: (event) => {
-        console.log("ПЕРЕХОПЛЕНО В КОМПОЗИТОРІ! Код:", event.key, "Текст:", event.text)
-    }
+    // MouseArea {
+    //     anchors.fill: parent
+    //     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+    //     // ВАЖЛИВО: Вимикаємо hover, щоб не красти події наведення (wl_pointer.enter)
+    //     hoverEnabled: false 
+        
+    //     onPressed: (mouse) => {
+    //         // Даємо вікну фокус клавіатури
+    //         surfaceItem.takeFocus()
+    //         // Наказуємо QML пропустити сам клік далі вниз, прямо у Firefox
+    //         mouse.accepted = false 
+    //     }
+    // }
+
     property var toplevel: shellSurface ? shellSurface.toplevel : null
     property string windowId 
     
@@ -23,9 +31,20 @@ ShellSurfaceItem {
     property var container
     property var windowManagerRef
 
+    onActiveFocusChanged: {
+        console.log(
+            "WaylandWindow:",
+            windowId,
+            "activeFocusChanged =",
+            activeFocus,
+            "focus =",
+            focus
+        )
+    }
+
     Component.onCompleted: {
         surfaceItem.z = ++container.globalZ
-        surfaceItem.forceActiveFocus()
+        surfaceItem.takeFocus()
     }
 
     Connections {
@@ -64,6 +83,8 @@ ShellSurfaceItem {
         }
         
         function onActivatedChanged() {
+            console.log("WaylandWindow: activated changed =", toplevel.activated)
+            console.log("WaylandWindow: states =", toplevel.states)
             if (toplevel) {
                 windowManagerRef.updateWindowData(windowId, "isActive", toplevel.activated);
                 if (toplevel.activated) {

@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 # 1. Спочатку завантажуємо модулі Qt6 (щоб CMake дізнався про команду qt_policy)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick WaylandCompositor)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick WaylandCompositor WaylandScannerTools)
 
 # 2. Встановлюємо нові політики Qt для правильного пакування QML
 qt_policy(SET QTP0001 NEW)
@@ -24,8 +24,14 @@ qt_add_executable(eternal-ui
     src/IconImageProvider.h
     src/AppFilterModel.cpp
     src/core/VTManager.cpp
+    src/XdgActivation.cpp
+    src/XdgActivation.h
 )
 
+qt_generate_wayland_protocol_server_sources(eternal-ui
+    FILES
+       ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-activation-v1.xml
+)
 # Підключаємо QML файли як модуль
 qt_add_qml_module(eternal-ui
     URI Eternal

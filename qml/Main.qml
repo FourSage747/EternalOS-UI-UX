@@ -8,6 +8,10 @@ WaylandCompositor {
     id: compositor
     socketName: "eternal-0"
 
+    XdgActivation {
+        id: xdgActivation
+    }
+
     WaylandManager { id: waylandManager }
     AppLauncher { id: sysAppLauncher }
     RunningAppsModel { id: runningAppsModel }
@@ -18,6 +22,8 @@ WaylandCompositor {
     }
 
     Component.onCompleted: {
+        xdgActivation.setCompositor(compositor)
+        xdgActivation.initialize()
         waylandManager.setupProtocols(compositor)
     }
     WaylandOutput {

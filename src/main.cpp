@@ -7,6 +7,7 @@
 #include "IconImageProvider.h"
 #include "AppFilterModel.h"
 #include "core/VTManager.h"
+#include "XdgActivation.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,6 +25,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<WaylandManager>("Eternal.Core", 1, 0, "WaylandManager");
     qmlRegisterType<AppModel>("Eternal.Core", 1, 0, "AppModel");
     qmlRegisterType<AppFilterModel>("Eternal.Core", 1, 0, "AppFilterModel");
+    qmlRegisterType<XdgActivation>("Eternal.Core", 1, 0, "XdgActivation");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("icons"), new IconImageProvider);

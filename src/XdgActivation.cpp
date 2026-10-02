@@ -121,16 +121,10 @@ void XdgActivation::xdg_activation_v1_activate(
     qDebug() << "XdgActivation: token seat =" << it->seat;
     qDebug() << "XdgActivation: token serial =" << it->serial;
 
-    qDebug() << "XdgActivation: setting keyboard focus";
-
-    seat->setKeyboardFocus(waylandSurface);
-    
-    qDebug() << "XdgActivation: keyboard focus after set ="
-            << seat->keyboardFocus();
-    qDebug() << "XdgActivation: activation request completed";
     m_tokens.erase(it);
-
-    qDebug() << "XdgActivation: keyboard focus set";
+    // The window manager focuses the matching ShellSurfaceItem, keeping Qt
+    // Quick's key-event destination and the Wayland seat in sync.
+    emit activationRequested(waylandSurface);
 }
 
 

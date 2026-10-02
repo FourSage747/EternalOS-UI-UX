@@ -1,0 +1,281 @@
+--- a/src/compositor/compositor_api/qwaylandkeyboard.cpp
++++ b/src/compositor/compositor_api/qwaylandkeyboard.cpp
+@@ -51,10 +51,6 @@
+     if (!keyboardResource || !focus)
+         return;
+ 
+-    // this is already the current  resource, do no send enter twice
+-    if (focusResource == keyboardResource)
+-        return;
+-
+     // check if new wl_keyboard resource is from the client owning the focus surface
+     if (wl_resource_get_client(focus->resource()) == keyboardResource->client()) {
+         sendEnter(focus, keyboardResource);
+@@ -73,10 +69,14 @@
+ {
+     if (surface && surface->isCursorSurface())
+         surface = nullptr;
++    if (focus == surface)
++        return;
+     if (focus != surface) {
+-        if (focusResource) {
++        if (focus) {
+             uint32_t serial = compositor()->nextSerial();
+-            send_leave(focusResource->handle, serial, focus->resource());
++            const auto resources = resourceMap().values(focus->waylandClient());
++            for (Resource *resource : resources)
++                send_leave(resource->handle, serial, focus->resource());
+         }
+         focusDestroyListener.reset();
+         if (surface)
+@@ -85,8 +85,11 @@
+ 
+     Resource *resource = surface ? resourceMap().value(surface->waylandClient()) : 0;
+ 
+-    if (resource && (focus != surface || focusResource != resource))
+-        sendEnter(surface, resource);
++    if (surface) {
++        const auto resources = resourceMap().values(surface->waylandClient());
++        for (Resource *keyboardResource : resources)
++            sendEnter(surface, keyboardResource);
++    }
+ 
+     focusResource = resource;
+     focus = surface;
+@@ -142,8 +145,11 @@
+     uint32_t time = compositor()->currentTimeMsecs();
+     uint32_t serial = compositor()->nextSerial();
+     uint key = toWaylandKey(code);
+-    if (focusResource)
+-        send_key(focusResource->handle, serial, time, key, state);
++    if (focus) {
++        const auto resources = resourceMap().values(focus->waylandClient());
++        for (Resource *resource : resources)
++            send_key(resource->handle, serial, time, key, state);
++    }
+ }
+ 
+ #if QT_CONFIG(xkbcommon)
+@@ -212,9 +218,12 @@
+     this->modsLocked = modsLocked;
+     this->group = group;
+ 
+-    if (focusResource) {
+-        send_modifiers(focusResource->handle, compositor()->nextSerial(), modsDepressed,
+-                       modsLatched, modsLocked, group);
++    if (focus) {
++        const auto resources = resourceMap().values(focus->waylandClient());
++        const uint32_t serial = compositor()->nextSerial();
++        for (Resource *resource : resources)
++            send_modifiers(resource->handle, serial, modsDepressed,
++                           modsLatched, modsLocked, group);
+ 
+         Qt::KeyboardModifiers currentState = Qt::NoModifier;
+         if (xkb_state_mod_index_is_active(xkbState(), shiftIndex, XKB_STATE_MODS_EFFECTIVE) == 1)
+@@ -253,13 +262,13 @@
+     }
+ 
+     xkb_state_update_mask(xkbState(), 0, modsLatched, modsLocked, 0, 0, 0);
+-    if (focusResource)
+-        send_modifiers(focusResource->handle,
+-                       compositor()->nextSerial(),
+-                       modsDepressed,
+-                       modsLatched,
+-                       modsLocked,
+-                       group);
++    if (focus) {
++        const auto resources = resourceMap().values(focus->waylandClient());
++        const uint32_t serial = compositor()->nextSerial();
++        for (Resource *resource : resources)
++            send_modifiers(resource->handle, serial, modsDepressed,
++                           modsLatched, modsLocked, group);
++    }
+ #endif
+ }
+ 
+@@ -477,9 +486,7 @@
+ QWaylandClient *QWaylandKeyboard::focusClient() const
+ {
+     Q_D(const QWaylandKeyboard);
+-    if (!d->focusResource)
+-        return nullptr;
+-    return QWaylandClient::fromWlClient(compositor(), d->focusResource->client());
++    return d->focus ? d->focus->client() : nullptr;
+ }
+ 
+ /*!
+@@ -488,8 +495,8 @@
+ void QWaylandKeyboard::sendKeyModifiers(QWaylandClient *client, uint32_t serial)
+ {
+     Q_D(QWaylandKeyboard);
+-    QtWaylandServer::wl_keyboard::Resource *resource = d->resourceMap().value(client->client());
+-    if (resource)
++    const auto resources = d->resourceMap().values(client->client());
++    for (QtWaylandServer::wl_keyboard::Resource *resource : resources)
+         d->send_modifiers(resource->handle, serial, d->modsDepressed, d->modsLatched, d->modsLocked, d->group);
+ }
+ 
+@@ -515,7 +522,7 @@
+ {
+ #if QT_CONFIG(xkbcommon)
+     if (ke->modifiers() != currentModifierState) {
+-        if (focusResource && ke->key() != Qt::Key_Shift
++        if (focus && ke->key() != Qt::Key_Shift
+                 && ke->key() != Qt::Key_Control && ke->key() != Qt::Key_Alt) {
+             // Only repair the state for non-modifier keys
+             // ### slightly awkward because the standard modifier handling
+@@ -533,8 +540,10 @@
+             if (ke->modifiers() & Qt::AltModifier)
+                 mods |= 1 << altIndex;
+             qCDebug(qLcWaylandCompositor) << "Keyboard modifier state mismatch detected for event" << ke << "state:" << currentModifierState << "repaired:" << Qt::hex << mods;
+-            send_modifiers(focusResource->handle, compositor()->nextSerial(), mods,
+-                    0, 0, group);
++            const auto resources = resourceMap().values(focus->waylandClient());
++            const uint32_t serial = compositor()->nextSerial();
++            for (Resource *resource : resources)
++                send_modifiers(resource->handle, serial, mods, 0, 0, group);
+             currentModifierState = ke->modifiers();
+         }
+     }
+--- a/tests/auto/compositor/compositor/mockkeyboard.h
++++ b/tests/auto/compositor/compositor/mockkeyboard.h
+@@ -20,6 +20,9 @@
+     uint m_lastKeyCode = 0;
+     uint m_lastKeyState = 0;
+     uint m_group = 0;
++    uint m_enterCount = 0;
++    uint m_keyCount = 0;
++    uint m_modsDepressed = 0;
+ };
+ 
+ #endif // MOCKKEYBOARD_H
+--- a/tests/auto/compositor/compositor/mockkeyboard.cpp
++++ b/tests/auto/compositor/compositor/mockkeyboard.cpp
+@@ -23,6 +23,7 @@
+     Q_UNUSED(keys);
+ 
+     static_cast<MockKeyboard *>(keyboard)->m_enteredSurface = surface;
++    ++static_cast<MockKeyboard *>(keyboard)->m_enterCount;
+ }
+ 
+ void keyboardLeave(void *keyboard, struct wl_keyboard *wl_keyboard, uint32_t serial, struct wl_surface *surface)
+@@ -45,6 +46,7 @@
+     auto kb = static_cast<MockKeyboard *>(keyboard);
+     kb->m_lastKeyCode = key;
+     kb->m_lastKeyState = state;
++    ++kb->m_keyCount;
+ }
+ 
+ void keyboardModifiers(void *keyboard, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group)
+@@ -57,6 +59,7 @@
+     Q_UNUSED(mods_locked);
+     auto kb = static_cast<MockKeyboard *>(keyboard);
+     kb->m_group = group;
++    kb->m_modsDepressed = mods_depressed;
+ }
+ 
+ static const struct wl_keyboard_listener keyboardListener = {
+--- a/tests/auto/compositor/compositor/tst_compositor.cpp
++++ b/tests/auto/compositor/compositor/tst_compositor.cpp
+@@ -42,6 +42,7 @@
+ #if QT_CONFIG(xkbcommon)
+     void simpleKeyboard();
+     void keyboardKeymaps();
++    void multipleKeyboardResources();
+     void keyboardLayoutSwitching();
+ #endif
+     void keyboardGrab();
+@@ -213,6 +214,93 @@
+     QTRY_COMPARE(mockKeyboard->m_lastKeyCode, 125u);
+ }
+ 
++void tst_WaylandCompositor::multipleKeyboardResources()
++{
++    TestCompositor compositor;
++    compositor.create();
++    auto *seat = compositor.defaultSeat();
++    seat->keymap()->setLayout("us");
++    MockClient client;
++    QTRY_COMPARE(client.m_seats.size(), 1);
++    auto *first = client.m_seats.first()->keyboard();
++    auto second = std::make_unique<MockKeyboard>(client.m_seats.first()->m_seat);
++    auto *surface = client.createSurface();
++    QTRY_COMPARE(compositor.surfaces.size(), 1);
++    seat->setKeyboardFocus(compositor.surfaces.first());
++    compositor.flushClients();
++    QTRY_COMPARE(first->m_enteredSurface, surface);
++    QTRY_COMPARE(second->m_enteredSurface, surface);
++
++    seat->sendKeyEvent(Qt::Key_A, true);
++    seat->sendKeyEvent(Qt::Key_A, false);
++    compositor.flushClients();
++    QTRY_COMPARE(first->m_keyCount, 2u);
++    QTRY_COMPARE(second->m_keyCount, 2u);
++    QCOMPARE(first->m_lastKeyCode, 30u);
++    QCOMPARE(second->m_lastKeyCode, 30u);
++
++    auto third = std::make_unique<MockKeyboard>(client.m_seats.first()->m_seat);
++    QTRY_COMPARE(third->m_enteredSurface, surface);
++    QCOMPARE(first->m_enterCount, 1u);
++    QCOMPARE(second->m_enterCount, 1u);
++    seat->keyboard()->setFocus(compositor.surfaces.first());
++    compositor.flushClients();
++    QCOMPARE(first->m_enterCount, 1u);
++
++    const auto keyboardPrivate = QWaylandKeyboardPrivate::get(seat->keyboard());
++    const auto shift = seat->keyboard()->keyToScanCode(Qt::Key_Shift);
++    keyboardPrivate->updateModifierState(shift, WL_KEYBOARD_KEY_STATE_PRESSED);
++    compositor.flushClients();
++    QTRY_VERIFY(first->m_modsDepressed != 0);
++    QTRY_COMPARE(second->m_modsDepressed, first->m_modsDepressed);
++    QTRY_COMPARE(third->m_modsDepressed, first->m_modsDepressed);
++    keyboardPrivate->updateModifierState(shift, WL_KEYBOARD_KEY_STATE_RELEASED);
++
++    // The mock seat binds v1 (no wl_keyboard.release); destroy the server
++    // resource explicitly to exercise the same destructor as release.
++    wl_resource_destroy(wl_client_get_object(compositor.surfaces.first()->waylandClient(),
++                        wl_proxy_get_id(reinterpret_cast<wl_proxy *>(third->m_keyboard))));
++    third.reset();
++    // Destroying the most recently bound resource must not stop the others.
++    seat->sendKeyEvent(Qt::Key_B, true);
++    seat->sendKeyEvent(Qt::Key_B, false);
++    compositor.flushClients();
++    QTRY_COMPARE(first->m_keyCount, 4u);
++    QTRY_COMPARE(second->m_keyCount, 4u);
++    QTRY_COMPARE(first->m_modsDepressed, 0u);
++    QTRY_COMPARE(second->m_modsDepressed, 0u);
++
++    seat->setKeyboardFocus(nullptr);
++    compositor.flushClients();
++    QTRY_VERIFY(!first->m_enteredSurface);
++    QTRY_VERIFY(!second->m_enteredSurface);
++    seat->sendKeyEvent(Qt::Key_C, true);
++    compositor.flushClients();
++    QCOMPARE(first->m_keyCount, 4u);
++    QCOMPARE(second->m_keyCount, 4u);
++
++    MockClient otherClient;
++    QTRY_COMPARE(otherClient.m_seats.size(), 1);
++    auto *otherKeyboard = otherClient.m_seats.first()->keyboard();
++    auto *otherSurface = otherClient.createSurface();
++    QTRY_COMPARE(compositor.surfaces.size(), 2);
++    seat->setKeyboardFocus(compositor.surfaces.last());
++    seat->sendKeyEvent(Qt::Key_D, true);
++    seat->sendKeyEvent(Qt::Key_D, false);
++    compositor.flushClients();
++    QTRY_COMPARE(otherKeyboard->m_enteredSurface, otherSurface);
++    QTRY_COMPARE(otherKeyboard->m_keyCount, 2u);
++    QCOMPARE(first->m_keyCount, 4u);
++    QCOMPARE(second->m_keyCount, 4u);
++    seat->setKeyboardFocus(compositor.surfaces.first());
++    compositor.flushClients();
++    QTRY_VERIFY(!otherKeyboard->m_enteredSurface);
++    QTRY_COMPARE(first->m_enterCount, 2u);
++    QTRY_COMPARE(second->m_enterCount, 2u);
++    wl_surface_destroy(otherSurface);
++    wl_surface_destroy(surface);
++}
++
+ void tst_WaylandCompositor::keyboardKeymaps()
+ {
+     TestCompositor compositor;

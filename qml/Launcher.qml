@@ -8,7 +8,7 @@ Popup {
     height: 350
     padding: 0
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-    onOpened: searchField.forceActiveFocus()
+    //onOpened: searchField.forceActiveFocus()
     onClosed: searchField.text = ""
     AppLauncher { id: appLauncher }
     AppModel { id: baseModel }

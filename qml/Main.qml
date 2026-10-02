@@ -10,6 +10,15 @@ WaylandCompositor {
 
     XdgActivation {
         id: xdgActivation
+        onActivationRequested: (surface) => winManager.activateSurface(surface)
+    }
+
+    PrimarySelection {
+        id: primarySelection
+    }
+
+    TextInputV1 {
+        id: textInputV1
     }
 
     WaylandManager { id: waylandManager }
@@ -24,6 +33,10 @@ WaylandCompositor {
     Component.onCompleted: {
         xdgActivation.setCompositor(compositor)
         xdgActivation.initialize()
+        primarySelection.setCompositor(compositor)
+        primarySelection.initialize()
+        textInputV1.setCompositor(compositor)
+        textInputV1.initialize()
         waylandManager.setupProtocols(compositor)
     }
     WaylandOutput {

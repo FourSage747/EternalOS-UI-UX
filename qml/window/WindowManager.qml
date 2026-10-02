@@ -7,6 +7,15 @@ QtObject {
     property var appModel
     property var container
 
+    function activateSurface(target) {
+        for (let window of container.children) {
+            if (window.surface === target) {
+                window.activate("xdg_activation");
+                return;
+            }
+        }
+    }
+
     function updateWindowData(winId, key, value) {
         for (let i = 0; i < appModel.count; i++) {
             if (appModel.get(i).winId === winId) {
@@ -29,8 +38,7 @@ QtObject {
                     surface.visible = true;
                     updateWindowData(winId, "isMinimized", false);
                     updateWindowData(winId, "isActive", true);
-                    surface.z = ++container.globalZ;
-                    surface.takeFocus();
+                    surface.activate("taskbar");
                 }
                 break;
             }

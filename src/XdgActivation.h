@@ -21,6 +21,9 @@ public:
     Q_INVOKABLE void initialize() override;
     Q_INVOKABLE void setCompositor(QWaylandCompositor *compositor);
 
+signals:
+    void activationRequested(QWaylandSurface *surface);
+
 protected:
     void xdg_activation_v1_get_activation_token(
         Resource *resource,

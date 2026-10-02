@@ -5,23 +5,7 @@ import QtWayland.Compositor.XdgShell
 ShellSurfaceItem {
     id: surfaceItem
     autoCreatePopupItems: true
-    
-    // 1. Дозволяємо компоненту приймати фокус клавіатури
-    focus: true
-
-    // MouseArea {
-    //     anchors.fill: parent
-    //     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-    //     // ВАЖЛИВО: Вимикаємо hover, щоб не красти події наведення (wl_pointer.enter)
-    //     hoverEnabled: false 
-        
-    //     onPressed: (mouse) => {
-    //         // Даємо вікну фокус клавіатури
-    //         surfaceItem.takeFocus()
-    //         // Наказуємо QML пропустити сам клік далі вниз, прямо у Firefox
-    //         mouse.accepted = false 
-    //     }
-    // }
+    focusOnClick: true
 
     property var toplevel: shellSurface ? shellSurface.toplevel : null
     property string windowId 
@@ -31,20 +15,32 @@ ShellSurfaceItem {
     property var container
     property var windowManagerRef
 
+    function activate(reason) {
+        waylandManager.traceFocus(reason, surface, surfaceItem);
+        // Toplevel creation precedes the first configured buffer commit.
+        // A request made before mapping is fulfilled by onHasContentChanged.
+        if (!surface || !surface.hasContent)
+            return;
+        visible = true;
+        surfaceItem.z = ++container.globalZ;
+        surfaceItem.takeFocus();
+    }
+
+    Connections {
+        target: surfaceItem.surface
+        function onHasContentChanged() {
+            if (surfaceItem.surface.hasContent)
+                surfaceItem.activate("mapped");
+        }
+    }
+
     onActiveFocusChanged: {
-        console.log(
-            "WaylandWindow:",
-            windowId,
-            "activeFocusChanged =",
-            activeFocus,
-            "focus =",
-            focus
-        )
+        waylandManager.traceFocus("qml.activeFocusChanged", surface, surfaceItem);
     }
 
     Component.onCompleted: {
+        waylandManager.traceFocus("created", surface, surfaceItem);
         surfaceItem.z = ++container.globalZ
-        surfaceItem.takeFocus()
     }
 
     Connections {

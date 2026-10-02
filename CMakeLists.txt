@@ -26,11 +26,20 @@ qt_add_executable(eternal-ui
     src/core/VTManager.cpp
     src/XdgActivation.cpp
     src/XdgActivation.h
+    src/selection/PrimarySelection.cpp
+    src/selection/PrimarySelection.h
+    src/data/DataDeviceManager.cpp
+    src/data/DataDeviceManager.h
+    src/textinput/TextInputV1.cpp
+    src/textinput/TextInputV1.h
 )
 
 qt_generate_wayland_protocol_server_sources(eternal-ui
     FILES
        ${CMAKE_CURRENT_SOURCE_DIR}/protocols/xdg-activation-v1.xml
+       ${CMAKE_CURRENT_SOURCE_DIR}/protocols/primary-selection-unstable-v1.xml
+       ${CMAKE_CURRENT_SOURCE_DIR}/protocols/text-input-unstable-v1.xml
+       ${CMAKE_CURRENT_SOURCE_DIR}/protocols/wayland.xml
 )
 # Підключаємо QML файли як модуль
 qt_add_qml_module(eternal-ui

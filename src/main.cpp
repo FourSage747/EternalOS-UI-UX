@@ -8,6 +8,8 @@
 #include "AppFilterModel.h"
 #include "core/VTManager.h"
 #include "XdgActivation.h"
+#include "selection/PrimarySelection.h"
+#include "textinput/TextInputV1.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +28,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<AppModel>("Eternal.Core", 1, 0, "AppModel");
     qmlRegisterType<AppFilterModel>("Eternal.Core", 1, 0, "AppFilterModel");
     qmlRegisterType<XdgActivation>("Eternal.Core", 1, 0, "XdgActivation");
+    qmlRegisterType<PrimarySelection>("Eternal.Core", 1, 0, "PrimarySelection");
+    qmlRegisterType<TextInputV1>("Eternal.Core", 1, 0, "TextInputV1");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("icons"), new IconImageProvider);

@@ -46,6 +46,11 @@ void WaylandManager::setupProtocols(QObject *compositorObj)
         return;
     }
 
+    // if (!m_dataDeviceManager) {
+    //     m_dataDeviceManager = new DataDeviceManager(compositor);
+    //     m_dataDeviceManager->initialize();
+    // }
+
     if (!m_textInputManagerV3) {
         m_textInputManagerV3 =
             new QWaylandTextInputManagerV3(compositor);

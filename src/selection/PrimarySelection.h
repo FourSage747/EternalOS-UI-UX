@@ -5,6 +5,16 @@
 
 #include "qwayland-server-primary-selection-unstable-v1.h"
 
+class PrimarySelectionDevice
+    : public QtWaylandServer::zwp_primary_selection_device_v1
+{
+protected:
+    void zwp_primary_selection_device_v1_set_selection(
+        Resource *resource,
+        struct ::wl_resource *source,
+        uint32_t serial) override;
+};
+
 class PrimarySelection
     : public QWaylandCompositorExtensionTemplate<PrimarySelection>,
       public QtWaylandServer::zwp_primary_selection_device_manager_v1

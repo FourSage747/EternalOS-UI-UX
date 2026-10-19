@@ -1,0 +1,13 @@
+diff --git a/src/compositor/wayland_wrapper/qwldatadevicemanager.cpp b/src/compositor/wayland_wrapper/qwldatadevicemanager.cpp
+index 1d805e8..5313962 100644
+--- a/src/compositor/wayland_wrapper/qwldatadevicemanager.cpp
++++ b/src/compositor/wayland_wrapper/qwldatadevicemanager.cpp
+@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
+ namespace QtWayland {
+ 
+ DataDeviceManager::DataDeviceManager(QWaylandCompositor *compositor)
+-    : wl_data_device_manager(compositor->display(), 1)
++    : wl_data_device_manager(compositor->display(), 3)
+     , m_compositor(compositor)
+ {
+ }

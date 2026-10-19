@@ -1,6 +1,6 @@
 #pragma once
-
 #include <QObject>
+#include "data/DataDeviceManager.h"
 
 class QWaylandTextInputManagerV3;
 class QWaylandSurface;
@@ -20,4 +20,5 @@ public:
 private:
     QWaylandTextInputManagerV3 *m_textInputManagerV3 = nullptr;
     QWaylandSeat *m_seat = nullptr;
+    DataDeviceManager *m_dataDeviceManager = nullptr;
 };

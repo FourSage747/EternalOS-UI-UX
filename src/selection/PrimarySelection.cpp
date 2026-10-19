@@ -42,10 +42,11 @@ void PrimarySelection::zwp_primary_selection_device_manager_v1_create_source(
     Resource *resource,
     uint32_t id)
 {
-    Q_UNUSED(resource);
-    Q_UNUSED(id);
+    auto *source = new QtWaylandServer::zwp_primary_selection_source_v1();
 
-    qDebug() << "PrimarySelection: create_source";
+    source->init(resource->client(), id, 1);
+
+    qDebug() << "PrimarySelection: source created, id =" << id;
 }
 
 void PrimarySelection::zwp_primary_selection_device_manager_v1_get_device(
@@ -53,11 +54,17 @@ void PrimarySelection::zwp_primary_selection_device_manager_v1_get_device(
     uint32_t id,
     struct ::wl_resource *seat)
 {
-    Q_UNUSED(resource);
-    Q_UNUSED(id);
-    Q_UNUSED(seat);
+    if (!seat) {
+        qWarning() << "PrimarySelection: get_device received null seat";
+        return;
+    }
 
-    qDebug() << "PrimarySelection: get_device";
+    auto *device = new PrimarySelectionDevice();
+
+    device->init(resource->client(), id, 1);
+
+    qDebug() << "PrimarySelection: device created, id =" << id
+             << "seat =" << seat;
 }
 
 void PrimarySelection::zwp_primary_selection_device_manager_v1_destroy(
@@ -66,4 +73,16 @@ void PrimarySelection::zwp_primary_selection_device_manager_v1_destroy(
     Q_UNUSED(resource);
 
     qDebug() << "PrimarySelection: destroy";
+}
+
+void PrimarySelectionDevice::zwp_primary_selection_device_v1_set_selection(
+    Resource *resource,
+    struct ::wl_resource *source,
+    uint32_t serial)
+{
+    Q_UNUSED(resource);
+
+    qDebug() << "PrimarySelection: set_selection"
+             << "source =" << source
+             << "serial =" << serial;
 }

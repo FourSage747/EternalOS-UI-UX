@@ -10,6 +10,7 @@
 #include "XdgActivation.h"
 #include "selection/PrimarySelection.h"
 #include "textinput/TextInputV1.h"
+#include "data/DataDeviceManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<XdgActivation>("Eternal.Core", 1, 0, "XdgActivation");
     qmlRegisterType<PrimarySelection>("Eternal.Core", 1, 0, "PrimarySelection");
     qmlRegisterType<TextInputV1>("Eternal.Core", 1, 0, "TextInputV1");
+    qmlRegisterType<DataDeviceManager>("Eternal.Core", 1, 0, "DataDeviceManager");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("icons"), new IconImageProvider);

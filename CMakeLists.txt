@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Умикаємо AUTOMOC (це виправить головну помилку)
 set(CMAKE_AUTOMOC ON)
 
+# Use the patched, project-local QtWayland Compositor.
+set(Qt6WaylandCompositor_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/build/qtwayland/lib/cmake/Qt6WaylandCompositor"
+    CACHE PATH "Patched QtWayland Compositor package" FORCE
+)
+
 # 1. Спочатку завантажуємо модулі Qt6 (щоб CMake дізнався про команду qt_policy)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick WaylandCompositor WaylandScannerTools)
 
@@ -70,6 +76,12 @@ target_link_libraries(eternal-ui PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::WaylandCompositor
+)
+
+# Find the private QtWayland library at runtime, without LD_LIBRARY_PATH.
+set_target_properties(eternal-ui PROPERTIES
+    BUILD_RPATH "$ORIGIN/qtwayland/lib"
+    INSTALL_RPATH "$ORIGIN/../lib"
 )
 
 install(TARGETS eternal-ui DESTINATION bin)

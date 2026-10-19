@@ -1,0 +1,13 @@
+diff --git a/src/compositor/compositor_api/qwaylandseat.cpp b/src/compositor/compositor_api/qwaylandseat.cpp
+index 2f97572..75653b9 100644
+--- a/src/compositor/compositor_api/qwaylandseat.cpp
++++ b/src/compositor/compositor_api/qwaylandseat.cpp
+@@ -186,7 +186,7 @@ QWaylandSeat::~QWaylandSeat()
+ void QWaylandSeat::initialize()
+ {
+     Q_D(QWaylandSeat);
+-    d->init(d->compositor->display(), 4);
++    d->init(d->compositor->display(), 5);
+ 
+     if (d->capabilities & QWaylandSeat::Pointer)
+         d->pointer.reset(QWaylandCompositorPrivate::get(d->compositor)->callCreatePointerDevice(this));

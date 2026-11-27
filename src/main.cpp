@@ -1,3 +1,5 @@
+#include <QWaylandCompositor>
+#include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QIcon>
@@ -11,6 +13,9 @@
 #include "selection/PrimarySelection.h"
 #include "textinput/TextInputV1.h"
 #include "data/DataDeviceManager.h"
+#include "layershell/LayerShell.h"
+#include "XdgOutputManager.h"
+#include "EonProcessManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +37,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<PrimarySelection>("Eternal.Core", 1, 0, "PrimarySelection");
     qmlRegisterType<TextInputV1>("Eternal.Core", 1, 0, "TextInputV1");
     qmlRegisterType<DataDeviceManager>("Eternal.Core", 1, 0, "DataDeviceManager");
+    qmlRegisterType<LayerShell>("Eternal.Core", 1, 0, "LayerShell");
+    qmlRegisterType<XdgOutputManager>("Eternal.Core", 1, 0, "XdgOutputManager");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("icons"), new IconImageProvider);
@@ -43,6 +50,23 @@ int main(int argc, char *argv[])
 
     // Динамічне завантаження модуля - тепер воно працюватиме всюди!
     engine.loadFromModule("Eternal", "Main");
+
+    if (engine.rootObjects().isEmpty()) {
+        qCritical() << "Failed to load Eternal compositor";
+        return -1;
+    }
+
+    auto *compositor = qobject_cast<QWaylandCompositor *>(
+        engine.rootObjects().constFirst()
+    );
+
+    if (!compositor) {
+        qCritical() << "QML root object is not a WaylandCompositor";
+        return -1;
+    }
+
+    EonProcessManager eonProcessManager(&app);
+    eonProcessManager.setCompositor(compositor);
 
     return app.exec();
 }

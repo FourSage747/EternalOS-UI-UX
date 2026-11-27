@@ -6,14 +6,45 @@ ShellSurfaceItem {
     id: surfaceItem
     autoCreatePopupItems: true
     focusOnClick: true
-
+    moveItem: surfaceItem
+    property int titleBarHeight: 32
+    property bool showServerTitleBar: true
     property var toplevel: shellSurface ? shellSurface.toplevel : null
     property string windowId 
+    property bool initialPositionSet: false
     
     // Прокидаємо зовнішні залежності з Main.qml
     property var model
     property var container
     property var windowManagerRef
+
+    function updateMaximizedGeometry() {
+        if (!toplevel || !toplevel.maximized)
+            return
+
+        surfaceItem.x = 0
+        surfaceItem.y = 0
+
+        toplevel.sendMaximized(
+            Qt.size(container.width, container.height)
+        )
+    }
+
+    function centerWindow() {
+        if (initialPositionSet || !container)
+            return
+
+        if (container.width <= 0 || container.height <= 0)
+            return
+
+        if (surfaceItem.width <= 0 || surfaceItem.height <= 0)
+            return
+
+        surfaceItem.x = Math.max(0, (container.width - surfaceItem.width) / 2)
+        surfaceItem.y = Math.max(0, (container.height - surfaceItem.height) / 2)
+
+        initialPositionSet = true
+    }
 
     function activate(reason) {
         waylandManager.traceFocus(reason, surface, surfaceItem);
@@ -29,8 +60,10 @@ ShellSurfaceItem {
     Connections {
         target: surfaceItem.surface
         function onHasContentChanged() {
-            if (surfaceItem.surface.hasContent)
-                surfaceItem.activate("mapped");
+            if (surfaceItem.surface.hasContent) {
+                surfaceItem.centerWindow()
+                surfaceItem.activate("mapped")
+            }
         }
     }
 
@@ -90,14 +123,26 @@ ShellSurfaceItem {
         }
         
         function onMaximizedChanged() {
-            if (!toplevel) return; 
+            if (!toplevel) return
+
             if (toplevel.maximized) {
-                surfaceItem.x = 0
-                surfaceItem.y = 0
-                toplevel.sendMaximized(Qt.size(container.width, container.height))
+                surfaceItem.updateMaximizedGeometry()
             } else {
                 toplevel.sendUnmaximized(Qt.size(0, 0))
             }
+        }
+    }
+    Connections {
+        target: container
+
+        function onWidthChanged() {
+            surfaceItem.updateMaximizedGeometry()
+            surfaceItem.centerWindow()
+        }
+
+        function onHeightChanged() {
+            surfaceItem.updateMaximizedGeometry()
+            surfaceItem.centerWindow()
         }
     }
     
@@ -118,4 +163,17 @@ ShellSurfaceItem {
         }
         destroy();
     }
+
+    // TitleBar {
+    //     id: serverTitleBar
+
+    //     visible: surfaceItem.showServerTitleBar
+    //     width: surfaceItem.width
+    //     height: surfaceItem.titleBarHeight
+    //     z: 100
+
+    //     toplevel: surfaceItem.toplevel
+    //     windowSurface: surfaceItem
+    //     container: surfaceItem.container
+    // }
 }
